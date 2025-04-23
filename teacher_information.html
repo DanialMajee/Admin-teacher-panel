@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Update Information</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        h2 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #333;
+        }
+        form {
+            display: flex;
+            flex-direction: column;
+        }
+        label {
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #555;
+        }
+        input, textarea, button {
+            margin-bottom: 20px;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+        input[readonly] {
+            background-color: #f0f0f0;
+            cursor: not-allowed;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .loading {
+            text-align: center;
+            font-size: 18px;
+            color: #555;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-group:last-child {
+            margin-bottom: 0;
+        }
+        .input-wrapper {
+            display: flex;
+            flex-direction: column;
+        }
+        .input-wrapper textarea {
+            resize: vertical;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Update Information</h2>
+        <div id="loading" class="loading">Loading...</div>
+        <form id="updateForm" style="display:none;">
+            <div class="form-group">
+                <label for="name">Name:</label>
+                <input type="text" id="name" name="name" placeholder="Enter your name" required>
+            </div>
+
+            <div class="form-group">
+                <label for="expertise">Expertise:</label>
+                <input type="text" id="expertise" name="expertise" placeholder="Enter your expertise" required>
+            </div>
+
+            <div class="form-group">
+                <label for="email">Email:</label>
+                <input type="text" id="email" name="email" placeholder="Enter your email" rows="3" required >
+            </div>
+
+            <div class="form-group">
+                <label for="contact">Contact:</label>
+                <input type="text" id="contact" name="contact" placeholder="Enter your contact number" required>
+            </div>
+
+            <!-- Disabled Fields -->
+            <div class="form-group">
+                <label for="department">Department:</label>
+                <input type="text" id="department" name="department">
+            </div>
+
+            <div class="form-group">
+                <label for="cnic">CNIC (Read-Only):</label>
+                <input type="text" id="cnic" name="cnic" readonly>
+            </div>
+
+            <div class="form-group">
+                <label for="dateOfJoining">Date of Joining (Read-Only):</label>
+                <input type="text" id="dateOfJoining" name="dateOfJoining" readonly>
+            </div>
+
+            <div class="form-group">
+                <label for="latestAcademicDegree">Latest Academic Degree (Read-Only):</label>
+                <input type="text" id="latestAcademicDegree" name="latestAcademicDegree" readonly>
+            </div>
+
+            <button type="submit">Update Information</button>
+        </form>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
+        import { getFirestore, collection, query, where, getDocs, updateDoc } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
+    
+        const firebaseConfig = {
+            apiKey: "AIzaSyBlaU9PoLb9BC_-QaIOlH5IOiDzwA4GkqM",
+            authDomain: "fms1-4b3e7.firebaseapp.com",
+            databaseURL: "https://fms1-4b3e7-default-rtdb.firebaseio.com",
+            projectId: "fms1-4b3e7",
+            storageBucket: "fms1-4b3e7.appspot.com",
+            messagingSenderId: "57125289464",
+            appId: "1:57125289464:web:4f8fa3c23c0c8bb45e2a0d",
+            measurementId: "G-FZFHT67XXR"
+        };
+    
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+    
+        // Monitor authentication state
+        onAuthStateChanged(auth, async (user) => {
+            console.log("Auth state changed: ", user); // Check if user is logged in
+            if (user) {
+                const userEmail = user.email;
+                console.log("Logged-in user email:", userEmail);
+    
+                // Set initial loading state
+                document.getElementById("loading").style.display = "block";
+                document.getElementById("updateForm").style.display = "none";
+    
+                try {
+                    // Query Firestore to fetch document with matching email
+                    const teacherQuery = query(collection(db, "teachers"), where("email", "==", userEmail));
+                    const querySnapshot = await getDocs(teacherQuery);
+    
+                    if (!querySnapshot.empty) {
+                        querySnapshot.forEach((doc) => {
+                            const data = doc.data();
+                            console.log("Teacher data fetched:", data);
+    
+                            // Fill form with data
+                            document.getElementById("name").value = data.name || "";
+                            document.getElementById("expertise").value = data.expertise || "";
+                            document.getElementById("email").value = data.email || "";
+                            document.getElementById("contact").value = data.contact || "";
+                            document.getElementById("department").value = data.department || "";
+                            document.getElementById("cnic").value = data.cnic || "";
+                            document.getElementById("dateOfJoining").value = data.dateOfJoining || "";
+                            document.getElementById("latestAcademicDegree").value = data.latestAcademicDegree || "";
+                        });
+                    } else {
+                        console.error("No data found for this email:", userEmail);
+                        alert("No data found for this email.");
+                    }
+                } catch (error) {
+                    console.error("Error fetching user data:", error);
+                    alert("An error occurred. Please try again.");
+                } finally {
+                    document.getElementById("loading").style.display = "none";
+                    document.getElementById("updateForm").style.display = "block";
+                }
+            } else {
+                alert("You must be logged in to access this page.");
+                window.location.href = "login.html";
+            }
+        });
+    
+        // Handle form submission with confirmation
+        document.getElementById("updateForm").addEventListener("submit", async (e) => {
+            e.preventDefault();
+    
+            // Show confirmation before proceeding with the update
+            const confirmUpdate = window.confirm("Are you sure you want to update your information?");
+            
+            if (confirmUpdate) {
+                const userEmail = auth.currentUser?.email;
+    
+                if (!userEmail) {
+                    alert("Error: Unable to identify user.");
+                    return;
+                }
+    
+                // Collect only editable fields for update
+                const updatedData = {
+                    name: document.getElementById("name").value,
+                    expertise: document.getElementById("expertise").value,
+                    contact: document.getElementById("contact").value
+                };
+    
+                try {
+                    // Query Firestore to fetch document with matching email
+                    const teacherQuery = query(collection(db, "teachers"), where("email", "==", userEmail));
+                    const querySnapshot = await getDocs(teacherQuery);
+    
+                    if (!querySnapshot.empty) {
+                        querySnapshot.forEach(async (doc) => {
+                            const teacherRef = doc.ref;
+                            await updateDoc(teacherRef, updatedData);
+                            alert("Information updated successfully!");
+                        });
+                    } else {
+                        console.error("No data found for this email:", userEmail);
+                        alert("Failed to update information. No data found for this email.");
+                    }
+                } catch (error) {
+                    console.error("Error updating information:", error);
+                    alert("Failed to update information. Please try again.");
+                }
+            } else {
+                console.log("Update canceled.");
+            }
+        });
+    </script>
+    
+</body>
+</html>

@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Profile</title>
+    <input type="text" id="name" name="name" value="" required>
+<input type="email" id="email" name="email" value="" required>
+<input type="text" id="contact" name="contact" value="" required>
+<input type="text" id="expertise" name="expertise" value="" required>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #4CAF50;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            flex-direction: column;
+        }
+        .navbar {
+            background-color: #333;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            box-sizing: border-box;
+            position: absolute;
+            top: 5px;
+        }
+        .navbar .left {
+            display: flex;
+            align-items: center;
+        }
+        .navbar .left span {
+            font-size: 24px;
+            margin-right: 20px;
+            color: white;
+        }
+        .navbar .center {
+            display: flex;
+            justify-content: center;
+            flex-grow: 1;
+        }
+        .navbar .center a {
+            text-decoration: none;
+            color: white;
+            margin: 0 10px;
+        }
+        .navbar .right {
+            display: flex;
+            align-items: center;
+        }
+        .navbar .right img {
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            margin-right: 10px;
+        }
+        .navbar .right .info {
+            display: flex;
+            flex-direction: column;
+            color: white;
+        }
+        .navbar .logout {
+            color: red;
+            margin-left: 10px;
+            cursor: pointer;
+        }
+        .container {
+            padding: 20px;
+            background-color: #ddd;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 600px;
+            margin-top: 150px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 8px;
+            box-sizing: border-box;
+        }
+        .buttons {
+            display: flex;
+            justify-content: flex-start;
+        }
+        .buttons button {
+            padding: 10px 20px;
+            margin-right: 10px;
+            border: none;
+            cursor: pointer;
+        }
+        .buttons .update {
+            background-color: orange;
+            color: white;
+        }
+        .buttons .cancel {
+            background-color: gray;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="navbar">
+        <div class="left">
+            <span>Faculty Information System</span>
+        </div>
+        <div class="center">
+            <a href="add_admin.html">Home</a> <!-- Redirect to fms.html -->
+            <a href="edit_profile.html">Edit Profile</a>
+        </div>
+        <div class="right">
+            <img src="profile-icon.png" alt="Profile Icon">
+            <div class="info">
+                <span>adminName</span>
+                <span>admin@example.com</span>
+            </div>
+            <a href="#" class="logout" id="logoutBtn">Logout</a>
+        </div>
+    </div>
+
+    <div class="container">
+        <h2>Edit Profile</h2>
+        <form action="update_profile.php" method="POST">
+            <div class="form-group">
+                <label for="name">Name</label>
+                <input type="text" id="name" name="name" value="admin Name" required>
+            </div>
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input type="email" id="email" name="email" value="admin@example.com" required>
+            </div>
+            <div class="form-group">
+                <label for="contact">Contact No</label>
+                <input type="text" id="contact" name="contact" value="1234567890" required>
+            </div>
+            <div class="form-group">
+                <label for="expertise">Expertise</label>
+                <input type="text" id="expertise" name="expertise" value="Mathematics" required>
+            </div>
+            <div class="buttons">
+                <button class="update" type="submit">Update Profile</button>
+                <button class="cancel" type="reset">Cancel</button>
+            </div>
+        </form>
+    </div>
+
+
+    <script type="module">
+        // Import Firebase modules
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
+        import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
+    
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyBlaU9PoLb9BC_-QaIOlH5IOiDzwA4GkqM",
+            authDomain: "fms1-4b3e7.firebaseapp.com",
+            databaseURL: "https://fms1-4b3e7-default-rtdb.firebaseio.com",
+            projectId: "fms1-4b3e7",
+            storageBucket: "fms1-4b3e7.appspot.com",
+            messagingSenderId: "57125289464",
+            appId: "1:57125289464:web:4f8fa3c23c0c8bb45e2a0d"
+        };
+    
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+    
+        // Listen to auth state changes to get the current user
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                // Log user info
+                console.log("User is signed in:", user);
+    
+                // Assuming the displayName in Firebase Authentication is the same as the Firestore document ID
+                const userName = user.displayName; // Using the user's displayName as the Firestore document ID
+                console.log("Fetching data for user:", userName);
+    
+                // Firestore reference for the user document
+                const userDocRef = doc(db, "users", userName); // Use displayName as the document ID
+                console.log("Firestore reference:", userDocRef);
+    
+                // Fetch the user document from Firestore
+                getDoc(userDocRef).then((docSnap) => {
+                    if (docSnap.exists()) {
+                        console.log("User data found:", docSnap.data());
+    
+                        // Populate the form with the user's data
+                        const userData = docSnap.data();
+                        document.getElementById("name").value = userData.name || '';
+                        document.getElementById("email").value = userData.email || '';
+                        document.getElementById("contact").value = userData.contact || '';
+                        document.getElementById("expertise").value = userData.expertise || '';
+    
+                        // Update navbar with user info
+                        document.querySelector('.navbar .right .info span:nth-child(1)').textContent = userData.name || 'Admin Name';
+                        document.querySelector('.navbar .right .info span:nth-child(2)').textContent = userData.email || 'admin@example.com';
+                    } else {
+                        console.log("No user data found in Firestore for", userName);
+                    }
+                }).catch((error) => {
+                    console.error("Error getting user data from Firestore: ", error);
+                });
+            } else {
+                // Redirect to login page if user is not logged in
+                window.location.href = "login.html";
+            }
+        });
+    </script>
+    
+    
+    
+
+
+</body>
+</html>

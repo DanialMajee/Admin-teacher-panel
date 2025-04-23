@@ -1,0 +1,11 @@
+{
+  "name": "final-project",
+  "version": "1.0.0",
+  "type": "module",
+  "dependencies": {
+    "firebase": "^11.0.2"
+  },
+  "scripts": {
+    "start": "node rejister.js"
+  }
+}

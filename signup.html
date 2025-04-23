@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f0f8ff;
+            font-family: Arial, sans-serif;
+        }
+        .signup-container {
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);   
+            width: 300px;
+            text-align: center;
+        }
+        .signup-container h2 {
+            margin-bottom: 20px;
+            color: #333333;
+        }
+        .signup-container input[type="text"],
+        .signup-container input[type="email"],
+        .signup-container input[type="password"],
+        .signup-container select {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #cccccc;
+            border-radius: 5px;
+        }
+        .signup-container button {
+            width: 100%;
+            padding: 10px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .signup-container button:hover {
+            background-color: #45a049;
+        }
+        .signup-container a {
+            display: block;
+            margin-top: 20px;
+            color: #4CAF50;
+            text-decoration: none;
+        }
+        .signup-container a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="signup-container">
+        <h2>Sign Up</h2>
+        <form>
+            <div id="SignUpMessage" class="messageDiv" style="display: n;"></div>
+            <input id="first-name" type="text" placeholder="First Name" required>
+            <input id="last-name" type="text" placeholder="Last Name" required>
+            <select id="gender" required>
+                <option value="" disabled selected>Select Gender</option>
+                <option value="male">Male</option>
+                <option value="female">Female</option>
+                <option value="other">Other</option>
+            </select>
+            <input id="signup-email" type="email" placeholder="Email" required>
+            <input id="signup-password" type="password" placeholder="Password" required>
+            <button id="signup-submit" type="button">Sign Up</button>
+        </form>
+        <a href="login.html">Already have an account? Login</a>
+    </div>
+    <script type="module">
+        // Import the functions you need from the SDKs you need
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
+        import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-database.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-analytics.js";
+
+        // Your web app's Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyBlaU9PoLb9BC_-QaIOlH5IOiDzwA4GkqM",
+            authDomain: "fms1-4b3e7.firebaseapp.com",
+            databaseURL: "https://fms1-4b3e7-default-rtdb.firebaseio.com",
+            projectId: "fms1-4b3e7",
+            storageBucket: "fms1-4b3e7.appspot.com",
+            messagingSenderId: "57125289464",
+            appId: "1:57125289464:web:4f8fa3c23c0c8bb45e2a0d",
+            measurementId: "G-FZFHT67XXR"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const analytics = getAnalytics(app);
+        const db = getDatabase(app);
+
+        // Add event listener to the submit button
+        document.getElementById("signup-submit").addEventListener('click', function(e) {
+            e.preventDefault();
+            // Get input values
+            const firstName = document.getElementById("first-name").value;
+            const lastName = document.getElementById("last-name").value;
+            const gender = document.getElementById("gender").value;
+            const email = document.getElementById("signup-email").value;
+            const password = document.getElementById("signup-password").value;
+
+            if (!firstName || !lastName || !gender || !email || !password) {
+                alert("Please fill in all fields.");
+                return;
+            }
+
+            // Write data to Firebase
+            set(ref(db, 'users/' + email.replace('.', '_')), {
+                firstName: firstName,
+                lastName: lastName,
+                gender: gender,
+                email: email,
+                password: password
+            })
+            .then(() => {
+                alert("Signup Successful!");
+            })
+            .catch((error) => {
+                console.error("Error writing to database:", error);
+                alert("Error: " + error.message);
+            });
+        });
+    </script>
+</body>
+</html>

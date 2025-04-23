@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Profiles</title>
+    <style>
+        .profile-card {
+            border: 1px solid orange;
+            padding: 10px;
+            margin: 10px;
+            background-color: #4CAF50;
+            width: 350px;
+            display: inline-block;
+            vertical-align: top;
+        }
+    </style>
+</head>
+<body>
+    <div id="profiles-container"></div> <!-- Container for the profiles -->
+    
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
+        import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBlaU9PoLb9BC_-QaIOlH5IOiDzwA4GkqM",
+            authDomain: "fms1-4b3e7.firebaseapp.com",
+            databaseURL: "https://fms1-4b3e7-default-rtdb.firebaseio.com",
+            projectId: "fms1-4b3e7",
+            storageBucket: "fms1-4b3e7.firebasestorage.app",
+            messagingSenderId: "57125289464",
+            appId: "1:57125289464:web:4f8fa3c23c0c8bb45e2a0d",
+            measurementId: "G-FZFHT67XXR"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // Fetch data from Firestore
+        async function fetchProfiles() {
+            try {
+                const querySnapshot = await getDocs(collection(db, "teachers"));
+                const profilesContainer = document.getElementById("profiles-container");
+                profilesContainer.innerHTML = ''; // Clear any previous content
+
+                querySnapshot.forEach((doc) => {
+                    const data = doc.data(); // Fetch data for each teacher
+                    const profileCard = `
+                        <div class="profile-card">
+                            <p>Name: ${data.name}</p>
+                            <p>Age: ${data.age}</p>
+                            <p>CNIC: ${data.cnic}</p>
+                            <p>Department: ${data.department}</p>
+                            <p>Degree: ${data.degree}</p>
+                            <p>Email: ${data.email}</p>
+                            <p>Password: ${data.password}</p>
+                            <p>Expertise: ${data.expertise}</p>
+                            <p>Contact: ${data.contact}</p>
+                            <p>Landline: ${data.landline}</p>
+                            <p>Role: ${data.role}</p>
+                        </div>
+                    `;
+                    profilesContainer.innerHTML += profileCard; // Add each profile card
+                });
+            } catch (error) {
+                console.error("Error fetching profiles: ", error);
+            }
+        }
+
+        // Call the function to fetch and display the profiles
+        fetchProfiles();
+    </script>
+</body>
+</html>

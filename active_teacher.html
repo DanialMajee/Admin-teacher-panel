@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Faculty Management System</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+        .container {
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+            background: white;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+        }
+        h2 {
+            text-align: center;
+            color: white;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        table th, table td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: left;
+        }
+        table th {
+            background-color: #4CAF50;
+            color: white;
+        }
+        .no-data {
+            text-align: center;
+            margin-top: 20px;
+            color: #666;
+        }
+        .update-button {
+            margin-top: 20px;
+            text-align: center;
+        }
+        .update-button button {
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        .update-button button:hover {
+            background-color: #45a049;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 20px;
+            background-color: #333;
+            color: white;
+        }
+        .header .title {
+            flex-grow: 1;
+            text-align: center;
+        }
+        .admin-info {
+            display: flex;
+            align-items: center;
+        }
+        .admin-info img {
+            border-radius: 50%;
+            margin-right: 10px;
+            width: 40px;
+            height: 40px;
+        }
+        .admin-details {
+            display: flex;
+            flex-direction: column;
+        }
+        .logout {
+            background-color: #f44336;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            margin-left: 10px;
+            cursor: pointer;
+        }
+    </style>
+    <script src="https://www.gstatic.com/firebasejs/9.17.2/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.17.2/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.17.2/firebase-firestore.js"></script>
+</head>
+<body>
+    <div class="header">
+        <div class="menu-bar-header">
+            <h3>Menu Bar</h3>
+        </div>
+        <h2 class="title">Faculty Management System</h2>
+        <div class="admin-info">
+            <div class="admin-details">
+                <span id="teacher-name">Teacher Name</span>
+                <span id="teacher-email">Teacher@example.com</span>
+            </div>
+            <button class="logout" id="logoutBtn">Logout</button>
+        </div>
+    </div>
+    <div class="container">
+        <h2>Active Teachers</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Department</th>
+                    <th>Expertise</th>
+                </tr>
+            </thead>
+            <tbody id="teacherList">
+                <!-- Teacher rows will be inserted here -->
+            </tbody>
+        </table>
+        <div id="noData" class="no-data">No active teachers found.</div>
+        <div class="update-button">
+            <button id="updateButton">Update Your Information</button>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.17.2/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.17.2/firebase-auth.js";
+        import { getFirestore, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/9.17.2/firebase-firestore.js";
+        
+        const firebaseConfig = {
+            apiKey: "AIzaSyBlaU9PoLb9BC_-QaIOlH5IOiDzwA4GkqM",
+            authDomain: "fms1-4b3e7.firebaseapp.com",
+            projectId: "fms1-4b3e7",
+            storageBucket: "fms1-4b3e7.appspot.com",
+            messagingSenderId: "57125289464",
+            appId: "1:57125289464:web:4f8fa3c23c0c8bb45e2a0d",
+            measurementId: "G-FZFHT67XXR"
+        };
+        
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        const adminDetails = document.querySelector('.admin-details');
+        const teacherList = document.getElementById('teacherList');
+        const noData = document.getElementById('noData');
+        const updateButton = document.getElementById('updateButton');
+
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                const userEmail = user.email;
+                console.log("Logged-in user email:", userEmail);
+
+                // Display logged-in user's email while fetching other details
+                adminDetails.innerHTML = `
+                    <span id="teacher-email">${userEmail}</span>
+                `;
+
+                // Fetch and display active teachers' data
+                try {
+                    const teacherQuery = query(
+                        collection(db, "teachers"),
+                        where("status", "==", "active") // Filter for active teachers
+                    );
+                    const querySnapshot = await getDocs(teacherQuery);
+
+                    if (!querySnapshot.empty) {
+                        noData.style.display = 'none';
+                        querySnapshot.forEach((doc) => {
+                            const teacherData = doc.data();
+                            console.log("Active teacher data fetched:", teacherData);
+
+                            const row = document.createElement('tr');
+                            row.innerHTML = `
+                                <td>${teacherData.name || "Unknown Name"}</td>
+                                <td>${teacherData.email || "Unknown Email"}</td>
+                                <td>${teacherData.department || "Unknown Department"}</td>
+                                <td>${teacherData.expertise || "Unknown Expertise"}</td>
+                            `;
+                            teacherList.appendChild(row);
+                        });
+                    } else {
+                        noData.style.display = 'block';
+                    }
+                } catch (error) {
+                    console.error("Error loading teacher data:", error);
+                }
+
+                // Fetch and display logged-in user's name
+                try {
+                    const userQuery = query(
+                        collection(db, "teachers"),
+                        where("email", "==", userEmail)
+                    );
+                    const userSnapshot = await getDocs(userQuery);
+
+                    if (!userSnapshot.empty) {
+                        userSnapshot.forEach((doc) => {
+                            const teacherData = doc.data();
+                            const teacherName = teacherData.name || "Unknown Teacher";
+
+                            adminDetails.innerHTML = `
+                                <span id="teacher-name">${teacherName}</span>
+                                <span id="teacher-email">${userEmail}</span>
+                            `;
+                        });
+                    } else {
+                        // Handle case when the user document is not found
+                        adminDetails.innerHTML = `
+                            <span id="teacher-name">Unknown Teacher</span>
+                            <span id="teacher-email">${userEmail}</span>
+                        `;
+                    }
+                } catch (error) {
+                    console.error("Error fetching logged-in user's details:", error);
+                }
+            } else {
+                window.location.href = "login.html";  // Redirect to login if not logged in
+            }
+
+            // Logout functionality
+            const logoutBtn = document.getElementById("logoutBtn");
+
+            logoutBtn.addEventListener("click", () => {
+                const confirmation = confirm("Are you sure you want to logout?");
+                if (confirmation) {
+                    auth.signOut()
+                        .then(() => {
+                            console.log("User logged out.");
+                            window.location.href = "login.html"; // Redirect to login page
+                        })
+                        .catch((error) => {
+                            console.error("Error logging out:", error);
+                        });
+                } else {
+                    console.log("Logout cancelled.");
+                }
+            });
+
+            // Redirect to teacher information page on button click
+            updateButton.addEventListener('click', () => {
+                window.location.href = 'teacher_information.html'; // Redirect to teacher_information.html
+            });
+        });
+    </script>
+</body>
+</html>

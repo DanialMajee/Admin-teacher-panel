@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f0f8ff;
+            margin: 0;
+            font-family: Arial, sans-serif;
+        }
+        .login-container {
+            width: 340px;
+            height: 330px;
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        .login-container input[type="email"],
+        .login-container input[type="password"] {
+            width: 90%;
+            padding: 8px;
+            margin: 15px 0;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        .login-container button {
+            width: 90%;
+            padding: 8px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 15px;
+        }
+        .login-container button:hover {
+            background-color: #45a049;
+        }
+        .login-container .role {
+            margin: 15px 0;
+        }
+        .login-container .role input {
+            margin: 0 5px;
+        }
+        .login-container a {
+            color: #4CAF50;
+            text-decoration: none;
+            margin-top: 15px;
+        }
+        .login-container a:hover {
+            text-decoration: underline;
+        }
+        .error-message {
+            color: red;
+            margin-top: 10px;
+        }
+    </style>
+    <!-- Firebase SDKs -->
+    <script type="module" src="https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js"></script>
+    <script type="module" src="https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js"></script>
+    <script type="module" src="https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js"></script>
+</head>
+<body>
+    <div class="login-container">
+        <h2>Login</h2>
+        <form id="login-form">
+            <input type="email" id="email" placeholder="Email" required>
+            <input type="password" id="password" placeholder="Password" required>
+            <div class="role">
+                <input type="radio" id="admin" name="role" value="admin">
+                <label for="admin">Admin</label>
+                <input type="radio" id="teacher" name="role" value="teacher" checked>
+                <label for="teacher">Teacher</label>
+            </div>
+            <button type="submit">Login</button>
+        </form>
+        <p>Don't have an account? <a href="signup.html">Sign Up</a></p>
+        <p class="error-message" id="error-message" style="display:none;">Access denied. Incorrect role.</p>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
+        import { getFirestore, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBlaU9PoLb9BC_-QaIOlH5IOiDzwA4GkqM",
+            authDomain: "fms1-4b3e7.firebaseapp.com",
+            databaseURL: "https://fms1-4b3e7-default-rtdb.firebaseio.com",
+            projectId: "fms1-4b3e7",
+            storageBucket: "fms1-4b3e7.appspot.com",
+            messagingSenderId: "57125289464",
+            appId: "1:57125289464:web:4f8fa3c23c0c8bb45e2a0d",
+            measurementId: "G-FZFHT67XXR"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // Login form and fields
+        const loginForm = document.getElementById("login-form");
+        const emailField = document.getElementById("email");
+        const passwordField = document.getElementById("password");
+        const errorMessage = document.getElementById("error-message");
+
+        // Handle form submission
+        loginForm.addEventListener("submit", async (event) => {
+            event.preventDefault(); // Prevent the form from reloading the page
+
+            const email = emailField.value;
+            const password = passwordField.value;
+            const role = document.querySelector('input[name="role"]:checked').value;
+
+            try {
+                // Sign in with Firebase Authentication
+                const userCredential = await signInWithEmailAndPassword(auth, email, password);
+                const user = userCredential.user;
+
+                // Determine the collection based on the role
+                const collectionName = role === 'admin' ? 'admins' : 'teachers';
+
+                // Query Firestore for the user's document based on their email field
+                const q = query(collection(db, collectionName), where("email", "==", user.email));
+                const querySnapshot = await getDocs(q);
+
+                if (!querySnapshot.empty) {
+                    querySnapshot.forEach((doc) => {
+                        const userData = doc.data();
+                        if (userData.status === "active") {
+                            // Redirect based on user role
+                            if (role === 'admin') {
+                                window.location.href = "add_teacher.html";  // Redirect to Admin Dashboard
+                            } else if (role === 'teacher') {
+                                window.location.href = "active_teacher.html";  // Redirect to Teacher Dashboard
+                            }
+                        } else {
+                            errorMessage.style.display = 'block'; // Show error message
+                            errorMessage.textContent = "User is inactive. Please contact support.";
+                        }
+                    });
+                } else {
+                    errorMessage.style.display = 'block'; // Show error message
+                    errorMessage.textContent = "User not found.";
+                }
+
+            } catch (error) {
+                console.error("Error during login:", error.message);
+                errorMessage.style.display = 'block'; // Show error message
+                errorMessage.textContent = "Error during login: " + error.message;
+            }
+        });
+    </script>
+</body>
+</html>

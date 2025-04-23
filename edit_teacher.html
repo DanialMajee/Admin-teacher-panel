@@ -1,0 +1,270 @@
+<!DOCTYPE html>   
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Faculty Information System</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #4CAF50;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            flex-direction: column;
+        }
+        .navbar {
+            background-color: #333;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            box-sizing: border-box;
+            position: absolute;
+            top: 5px; /* Adjust the black border position */
+        }
+        .navbar .left {
+            display: flex;
+            align-items: center;
+        }
+        .navbar .left span {
+            font-size: 24px;
+            margin-right: 20px;
+            color: white; /* Make text white */
+        }
+        .navbar .center {
+            display: flex;
+            justify-content: center;
+            flex-grow: 1;
+        }
+        .navbar .center a {
+            text-decoration: none;
+            color: white; /* Make text white */
+            margin: 0 10px;
+        }
+        .navbar .right {
+            display: flex;
+            align-items: center;
+        }
+        .navbar .right img {
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            margin-right: 10px;
+        }
+        .navbar .right .info {
+            display: flex;
+            flex-direction: column;
+            color: white;
+        }
+        .logout {
+            background-color: #f44336;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            margin-left: 10px;
+            cursor: pointer;
+        }
+        .container {
+            padding: 20px;
+            background-color: #ddd;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 600px;
+            margin-top: 150px; /* Adjust margin to compensate for the navbar */
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 8px;
+            box-sizing: border-box;
+        }
+        .buttons {
+            display: flex;
+            justify-content: flex-start;
+        }
+        .buttons button {
+            padding: 10px 20px;
+            margin-right: 10px;
+            border: none;
+            cursor: pointer;
+        }
+        .buttons .update {
+            background-color: orange;
+            color: white;
+        }
+        .buttons .cancel {
+            background-color: gray;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="navbar">
+        <div class="left">
+            <span>Faculty Information System</span>
+        </div>
+        <div class="center">
+            <a href="add_teacher.html">Home</a> <!-- Redirect to add_teacher.html -->
+        </div>
+        <div class="right">
+            <div class="info" id="adminDetails">
+                <span>Loading...</span> <!-- Placeholder while user info is loading -->
+            </div>
+            <a href="#" class="logout" id="logoutBtn">Logout</a>
+        </div>
+    </div>
+    
+    <div class="container">
+        <h2>Edit Teacher</h2>
+        <div class="form-group">
+            <label for="name">Name</label>
+            <input type="text" id="name" name="name">
+        </div>
+        <div class="form-group">
+            <label for="cnic">CNIC</label>
+            <input type="text" id="cnic" name="cnic">
+        </div>
+        <div class="form-group">
+            <label for="email">Email</label>
+            <input type="email" id="email" name="email">
+        </div>
+        <div class="form-group">
+            <label for="contact">Contact No</label>
+            <input type="text" id="contact" name="contact">
+        </div>
+        <div class="form-group">
+            <label for="landline">Landline No</label>
+            <input type="text" id="landline" name="landline">
+        </div>
+        <div class="form-group">
+            <label for="expertise">Expertise</label>
+            <input type="text" id="expertise" name="expertise">
+        </div>
+        <div class="buttons">
+            <button class="update" id="updateBtn">Update Teacher</button>
+            <button class="cancel">Cancel</button>
+        </div>
+    </div>
+
+    <script type="module">
+        // Import Firebase modules
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
+        import { getFirestore, doc, getDoc, setDoc, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
+        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
+
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyBlaU9PoLb9BC_-QaIOlH5IOiDzwA4GkqM",
+            authDomain: "fms1-4b3e7.firebaseapp.com",
+            databaseURL: "https://fms1-4b3e7-default-rtdb.firebaseio.com",
+            projectId: "fms1-4b3e7",
+            storageBucket: "fms1-4b3e7.appspot.com",
+            messagingSenderId: "57125289464",
+            appId: "1:57125289464:web:4f8fa3c23c0c8bb45e2a0d"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+
+        // Fetch teacher data when name is entered
+        document.getElementById("name").addEventListener("blur", async function() {
+            const name = document.getElementById("name").value;
+            const teacherRef = doc(db, "teachers", name); // Assuming 'teachers' is the collection
+
+            try {
+                const docSnap = await getDoc(teacherRef);
+                if (docSnap.exists()) {
+                    const teacherData = docSnap.data();
+                    document.getElementById("cnic").value = teacherData.cnic || "";
+                    document.getElementById("email").value = teacherData.email || "";
+                    document.getElementById("contact").value = teacherData.contact || "";
+                    document.getElementById("landline").value = teacherData.landline || "";
+                    document.getElementById("expertise").value = teacherData.expertise || "";
+                } else {
+                    alert("No teacher found with this name!");
+                }
+            } catch (error) {
+                console.error("Error fetching teacher data:", error);
+            }
+        });
+
+        // Fetch and display user information (Admin or User) from Firestore
+        onAuthStateChanged(auth, async (user) => {
+    if (user) {
+        try {
+            // Query the admins collection where email matches the logged-in user's email
+            const adminsRef = collection(db, "admins");  // Corrected the collection name
+            const q = query(adminsRef, where("email", "==", user.email));
+            const querySnapshot = await getDocs(q);
+
+            if (!querySnapshot.empty) {
+                querySnapshot.forEach((doc) => {
+                    const adminData = doc.data();
+                    document.getElementById("adminDetails").innerHTML = `
+                        <span>${adminData.name || "Admin Name"}</span>
+                        <span>${adminData.email}</span>
+                    `;
+                });
+            } else {
+                document.getElementById("adminDetails").innerHTML = `
+                    <span>Admin data not found</span>
+                    <span>${user.email}</span>
+                `;
+            }
+        } catch (error) {
+            console.error("Error fetching admin data:", error);
+        }
+    }
+});
+        // Update teacher data when "Update Teacher" is clicked
+        document.getElementById("updateBtn").addEventListener("click", async function() {
+            const name = document.getElementById("name").value;
+            const teacherRef = doc(db, "teachers", name);
+
+            const updatedData = {
+                cnic: document.getElementById("cnic").value,
+                email: document.getElementById("email").value,
+                contact: document.getElementById("contact").value,
+                landline: document.getElementById("landline").value,
+                expertise: document.getElementById("expertise").value
+            };
+
+            try {
+                await setDoc(teacherRef, updatedData, { merge: true }); // Merge to update only changed fields
+                alert("Teacher data updated successfully!");
+            } catch (error) {
+                console.error("Error updating teacher data:", error);
+                alert("Failed to update teacher data.");
+            }
+        });
+
+        // Logout functionality with confirmation
+        document.getElementById("logoutBtn").addEventListener("click", () => {
+            const confirmation = confirm("Are you sure you want to log out?");
+            if (confirmation) {
+                signOut(auth)
+                    .then(() => {
+                        window.location.href = "login.html";
+                    })
+                    .catch((error) => {
+                        console.error("Error during logout:", error);
+                    });
+            }
+        });
+    </script>
+</body>
+</html>
